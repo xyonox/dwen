@@ -33,7 +33,10 @@ func run() error {
 	defer resp.Body.Close()
 	fmt.Println(resp.Status)
 
-	if resp.StatusCode != 200 {
+	length := resp.ContentLength / 1000000 // Formated into MB
+	fmt.Println(length)
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		return fmt.Errorf("bad status code: %d", resp.StatusCode)
 	}
 
