@@ -2,19 +2,46 @@ package main
 
 import (
 	"fmt"
+	"io"
+	"net/http"
+	"os"
 )
 
-//TIP <p>To run your code, right-click the code and select <b>Run</b>.</p> <p>Alternatively, click
-// the <icon src="AllIcons.Actions.Execute"/> icon in the gutter and select the <b>Run</b> menu item from here.</p>
 func main() {
-	//TIP <p>Press <shortcut actionId="ShowIntentionActions"/> when your caret is at the underlined text
-	// to see how GoLand suggests fixing the warning.</p><p>Alternatively, if available, click the lightbulb to view possible fixes.</p>
-	s := "gopher"
-	fmt.Println("Hello and welcome, %s!", s)
 
-	for i := 1; i <= 5; i++ {
-		//TIP <p>To start your debugging session, right-click your code in the editor and select the Debug option.</p> <p>We have set one <icon src="AllIcons.Debugger.Db_set_breakpoint"/> breakpoint
-		// for you, but you can always add more by pressing <shortcut actionId="ToggleLineBreakpoint"/>.</p>
-		fmt.Println("i =", 100/i)
+	resp, err := http.Get("https://www.toptal.com/developers/gitignore/api/macos")
+	if err != nil {
+		fmt.Println(err)
+		return
 	}
+	defer resp.Body.Close()
+	fmt.Println(resp.Status)
+
+	body, err := io.ReadAll(resp.Body)
+
+	if err != nil {
+
+		fmt.Println(err)
+		return
+
+	}
+
+	fmt.Println(string(body))
+
+	file, err := os.Create("test.md")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	err = file.Close()
+	if err != nil {
+		return
+	}
+
+	err = os.WriteFile("test.md", []byte(fmt.Sprintf("---\n%s\n---\n", string(body))), 0644)
+	if err != nil {
+		return
+	}
+
 }
