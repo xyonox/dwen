@@ -39,17 +39,21 @@ func run() error {
 	defer resp.Body.Close()
 	fmt.Println(resp.Status)
 
-	rawlength := resp.ContentLength - 1 // set 0 to start
-	length := rawlength / 1000000       // Formated into MB
+	rawLength := resp.ContentLength - 1 // set 0 to start
+	length := rawLength / 1000000       // Formated into MB
 	fmt.Println(length)
-	fmt.Println(rawlength)
+	fmt.Println(rawLength)
 
 	req, err := http.NewRequest("GET", *website, nil)
 	if err != nil {
 		return err
 	}
 
-	req.Header.Set("Range", fmt.Sprintf("bytes=0-%v", rawlength-2))
+	chunkLength := 100
+
+	chunkName := fmt.Sprintf("%s.chunk-%v", name, chunkLength)
+
+	req.Header.Set("Range", fmt.Sprintf("bytes=0-%v", chunkLength))
 
 	resp, err = http.DefaultClient.Do(req)
 	if err != nil {
@@ -63,7 +67,7 @@ func run() error {
 		return fmt.Errorf("bad status code: %d", resp.StatusCode)
 	}
 
-	file, err := os.Create(name)
+	file, err := os.Create(chunkName)
 	if err != nil {
 		return err
 	}
