@@ -9,6 +9,11 @@ import (
 	"strings"
 )
 
+type Chunk struct {
+	Start int64
+	End   int64
+}
+
 func run() error {
 
 	website := flag.String("w", "", "URL to website")
@@ -30,11 +35,29 @@ func run() error {
 	if err != nil {
 		return err
 	}
+
 	defer resp.Body.Close()
 	fmt.Println(resp.Status)
 
-	length := resp.ContentLength / 1000000 // Formated into MB
+	rawlength := resp.ContentLength - 1 // set 0 to start
+	length := rawlength / 1000000       // Formated into MB
 	fmt.Println(length)
+	fmt.Println(rawlength)
+
+	req, err := http.NewRequest("GET", *website, nil)
+	if err != nil {
+		return err
+	}
+
+	req.Header.Set("Range", fmt.Sprintf("bytes=0-%v", rawlength-2))
+
+	resp, err = http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	fmt.Println(resp.Status)
+	fmt.Println(resp.ContentLength)
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		return fmt.Errorf("bad status code: %d", resp.StatusCode)
