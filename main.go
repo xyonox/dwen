@@ -1,18 +1,26 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
 )
 
-func main() {
+func run() error {
 
-	resp, err := http.Get("https://www.toptal.com/developers/gitignore/api/macos")
+	website := flag.String("w", "", "URL to website")
+
+	flag.Parse()
+
+	if *website == "" {
+		return fmt.Errorf("-w flag is required. This flag set the URL to download")
+	}
+
+	resp, err := http.Get(*website)
 	if err != nil {
-		fmt.Println(err)
-		return
+		return err
 	}
 	defer resp.Body.Close()
 	fmt.Println(resp.Status)
@@ -20,28 +28,32 @@ func main() {
 	body, err := io.ReadAll(resp.Body)
 
 	if err != nil {
-
-		fmt.Println(err)
-		return
+		return err
 
 	}
 
-	fmt.Println(string(body))
-
 	file, err := os.Create("test.md")
 	if err != nil {
-		fmt.Println(err)
-		return
+		return err
 	}
 
 	err = file.Close()
 	if err != nil {
-		return
+		return err
 	}
 
 	err = os.WriteFile("test.md", []byte(fmt.Sprintf("---\n%s\n---\n", string(body))), 0644)
 	if err != nil {
-		return
+		return err
 	}
 
+	return nil
+}
+
+func main() {
+	if err := run(); err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Println("ok")
+	}
 }
